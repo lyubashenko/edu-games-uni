@@ -7,11 +7,11 @@
 <style>
   :root{
     --bg:#f9f9f7; --card:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
-    --border:rgba(11,11,11,.10); --accent:#2a78d6; --line:#c3c2b7;
+    --border:rgba(11,11,11,.10); --accent:#2a78d6; --line:#c3c2b7; --water:#3aa0c8;
   }
   @media (prefers-color-scheme: dark){
     :root{ --bg:#0d0d0d; --card:#1a1a19; --ink:#fff; --ink2:#c3c2b7; --muted:#898781;
-      --border:rgba(255,255,255,.10); --accent:#3987e5; --line:#4a4a46; }
+      --border:rgba(255,255,255,.10); --accent:#3987e5; --line:#4a4a46; --water:#4fb3da; }
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);
@@ -30,18 +30,23 @@
   svg{width:100%;height:auto;display:block}
   line.e{stroke:var(--line);stroke-width:3}
   line.e.deal{stroke:var(--accent);stroke-width:6}
+  line.e.road{stroke-dasharray:6 5}
   .nd circle{fill:var(--card);stroke:var(--ink2);stroke-width:1.5}
+  .nd.well circle{stroke:var(--water);stroke-width:3}
   .nd.me circle{fill:var(--accent);stroke:var(--accent)}
   .nd text.l{font-weight:700;font-size:17px;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
   .nd.me text.l{fill:#fff}
   .nd text.d{font-size:11px;fill:var(--ink2);text-anchor:middle}
-  .nd text.g{font-size:12px;font-weight:700;fill:var(--accent);text-anchor:middle}
+  .nd text.g{font-size:12px;font-weight:700;fill:var(--accent);text-anchor:middle;
+    paint-order:stroke;stroke:var(--card);stroke-width:5px;stroke-linejoin:round}
+  .nd text.d{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round}
   .nd.out{opacity:.4}
   .nd.pick{cursor:pointer}
   .nd.pick circle{stroke:var(--accent);stroke-width:3}
   .slider{display:flex;align-items:center;gap:10px;margin-top:10px}
-  .slider input{flex:1}
-  .slider .val{font-size:1.6rem;font-weight:700;min-width:2.2em;text-align:right;font-variant-numeric:tabular-nums}
+  .slider label{flex:none;max-width:9.5em}
+  .slider input{flex:1;min-width:0}
+  .slider .val{font-size:1.5rem;font-weight:700;min-width:2.6em;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   .btns{display:flex;gap:8px;margin-top:10px}
   button{flex:1;padding:13px 8px;font-size:1rem;font-weight:700;border-radius:10px;
     border:1px solid var(--border);background:var(--card);color:var(--ink);cursor:pointer;min-height:50px}
@@ -68,33 +73,37 @@
   <div class="card" id="intro">
     <b>Zasady:</b>
     <ol class="rules">
-      <li>Każda wymiana to <b>24 punkty</b> do podziału między dwie osoby połączone kreską.</li>
-      <li>W jednej rundzie każdy może zawrzeć <b>najwyżej jedną</b> wymianę.</li>
-      <li>Przed rundą ustawiasz, ile punktów <b>żądasz</b>. Wymiana dochodzi do skutku, gdy suma
-        żądań obu stron nie przekracza 24. Nadwyżkę dzielicie po równo.</li>
-      <li>Pozostali gracze to boty. Ich żądania widzisz pod kółkami. Kto zostaje bez wymiany,
-        następnym razem żąda mniej. Kto ją zawiera, żąda więcej.</li>
-      <li>Cztery plansze po 8 rund. Zbierasz punkty.</li>
+      <li><b>W wiosce wymienia się wodę 💧 za monety 🪙.</b> Zapas wody na tydzień jest dla
+        mieszkańca wart 24 monety. Właściciel studni ustala cenę, mieszkaniec mówi, ile najwyżej
+        zapłaci. Jeśli się zgadzają, płaci się po środku między tymi kwotami.</li>
+      <li>Studnia zarabia monety. Mieszkaniec liczy monety, które <b>zostały mu w sakiewce</b>:
+        24 minus to, co zapłacił.</li>
+      <li>W każdej rundzie studnia obsługuje <b>tylko jednego</b> mieszkańca, a mieszkaniec kupuje
+        wodę tylko z jednej studni.</li>
+      <li>Pozostali gracze to boty, ich oferty na najbliższą rundę widzisz pod kółkami. Kto zostaje bez wymiany,
+        następnym razem schodzi z ceny. Kto ją zawiera, podnosi stawkę.</li>
+      <li>Pięć plansz po 8 rund. Na dwóch ostatnich zamiast wody jest zwykły handel między
+        sąsiadami.</li>
     </ol>
     <div class="btns"><button class="primary" id="bStart">Zaczynamy</button></div>
   </div>
 
   <div class="card hidden" id="game">
-    <div class="prog"><span>plansza <b id="pLvl">1</b> / 4 · runda <b id="pRnd">1</b> / 8</span>
-      <span>twoje punkty: <b id="pPts">0</b></span></div>
+    <div class="prog"><span>plansza <b id="pLvl">1</b> / <span id="pLvlT"></span> · runda <b id="pRnd">1</b> / 8</span>
+      <span>twoje 🪙 <b id="pPts">0</b></span></div>
     <h2 id="lvlName"></h2>
     <p class="muted" id="lvlIntro"></p>
-    <svg id="net" viewBox="0 0 320 190" aria-label="sieć wymiany"></svg>
+    <svg id="net" viewBox="0 0 320 200" aria-label="sieć wymiany"></svg>
 
     <div id="predictBox" class="fb hidden">
-      <b>Zanim zagrasz:</b> kto w tej linii zarobi najwięcej po 8 rundach? Stuknij kółko.
+      <b>Zanim zagrasz:</b> kto w tej linii zbierze najwięcej monet po 8 rundach? Stuknij kółko.
     </div>
 
     <div id="playBox">
       <div class="slider">
-        <label for="dem" class="muted">Żądam:</label>
+        <label for="dem" class="muted" id="demLbl">Żądam:</label>
         <input type="range" id="dem" min="1" max="23" value="12">
-        <span class="val" id="demVal">12</span>
+        <span class="val" id="demVal">12 🪙</span>
       </div>
       <div class="btns"><button class="primary" id="bRound">Zagraj rundę</button></div>
     </div>
@@ -105,14 +114,14 @@
   <div class="card hidden" id="lvlEnd">
     <h2>Wynik planszy</h2>
     <p class="muted" id="lvlEndNote"></p>
-    <table><thead><tr><th>pozycja</th><th style="text-align:right">punkty po 8 rundach</th></tr></thead>
+    <table><thead><tr><th>pozycja</th><th style="text-align:right">🪙 po 8 rundach</th></tr></thead>
       <tbody id="lvlRows"></tbody></table>
     <div class="btns"><button class="primary" id="bLvlNext">Następna plansza ▸</button></div>
   </div>
 
   <div class="card hidden" id="final">
-    <h2>Twoje punkty w różnych pozycjach</h2>
-    <table><thead><tr><th>plansza i pozycja</th><th style="text-align:right">pkt</th></tr></thead>
+    <h2>Twoje monety w różnych pozycjach</h2>
+    <table><thead><tr><th>plansza i pozycja</th><th style="text-align:right">🪙</th></tr></thead>
       <tbody id="finRows"></tbody></table>
     <p class="muted">Grała ta sama osoba: ty. Zmieniało się tylko miejsce w sieci.</p>
     <div class="btns"><button id="bAgain">Zagraj jeszcze raz</button></div>
@@ -122,8 +131,10 @@
     <details>
       <summary>Po co ta gra? (debriefing)</summary>
       <p>Na planszach ze studnią władza zależy od tego, <b>kto ma alternatywy</b>. Mieszkańcy
-      konkurują o jedną studnię, więc studnia dyktuje warunki. Władza A nad B to zależność B od A
-      (Emerson): rośnie z wartością tego, co A kontroluje, maleje z liczbą alternatyw B.</p>
+      konkurują o jedną studnię, więc studnia dyktuje cenę. Wystarczy, że A ma drogę do drugiej
+      studni, a ta sama osoba w tym samym domu płaci dużo mniej, i to studnia zaczyna o nią
+      zabiegać. Władza A nad B to zależność B od A (Emerson): rośnie z wartością tego, co A
+      kontroluje, maleje z liczbą alternatyw B.</p>
       <p>W linii pięciu najbliżej wszystkich jest C, a mimo to najwięcej zbierają zwykle B i D.
       Ich partnerzy na końcach (A i E) nie mają nikogo innego, a C musi konkurować z nimi
       o tych samych dwóch partnerów. Badania nad sieciami wymiany pokazały to w laboratorium:
@@ -140,60 +151,83 @@
 <script>
 "use strict";
 const TOTAL=24, ROUNDS=8;
-// === PLANSZE (edytuj tutaj) ===
+// === PLANSZE (edytuj tutaj) — wells: węzły, które są studniami (plansze z wodą) ===
 const STAR={S:[160,40],A:[55,140],B:[160,150],C:[265,140]};
 const STAR_E=[["S","A"],["S","B"],["S","C"]];
+const STAR2={S:[195,40],T:[58,45],A:[70,145],B:[185,150],C:[280,140]};
+const STAR2_E=[["S","A"],["S","B"],["S","C"],["T","A"]];
 const LINE={A:[32,95],B:[96,95],C:[160,95],D:[224,95],E:[288,95]};
 const LINE_E=[["A","B"],["B","C"],["C","D"],["D","E"]];
 const LEVELS=[
-  {name:"Jedna studnia · jesteś mieszkańcem A",nodes:STAR,edges:STAR_E,me:"A",
-   intro:"S ma jedyną studnię w wiosce. Mieszkańcy A, B i C mogą wymieniać się tylko z S."},
-  {name:"Jedna studnia · jesteś studnią S",nodes:STAR,edges:STAR_E,me:"S",
+  {name:"Jedna studnia · jesteś mieszkańcem A",nodes:STAR,edges:STAR_E,me:"A",wells:["S"],
+   intro:"S ma jedyną studnię w wiosce. Mieszkańcy A, B i C mogą kupić wodę tylko u S."},
+  {name:"Jedna studnia · jesteś studnią S",nodes:STAR,edges:STAR_E,me:"S",wells:["S"],
    intro:"Ta sama wioska, zamiana ról. Teraz to ty masz studnię."},
+  {name:"Druga studnia · znów jesteś A",nodes:STAR2,edges:STAR2_E,me:"A",wells:["S","T"],road:["T","A"],
+   intro:"Za lasem jest sąsiednia wioska ze swoją studnią T. Droga do niej prowadzi tylko od twojego domu.",
+   compare:0},
   {name:"Linia pięciu · jesteś C, w samym środku",nodes:LINE,edges:LINE_E,me:"C",predict:true,
-   intro:"Każdy wymienia się tylko z sąsiadami. C ma najkrótszą drogę do wszystkich."},
+   intro:"Pięć osad przy jednej drodze. Sąsiedzi mogą zawrzeć jedną umowę handlową na rundę; umowa daje 24 monety zysku do podziału. C ma najkrótszą drogę do wszystkich."},
   {name:"Linia pięciu · jesteś B",nodes:LINE,edges:LINE_E,me:"B",
-   intro:"Ta sama linia, inna pozycja."}
+   intro:"Ta sama droga, inna pozycja."}
 ];
-// ===============================
+// ===================================================================================
 const $=id=>document.getElementById(id);
 let lvl=0, rnd=0, demand={}, earn={}, last={}, deals=[], predicted=null, results=[];
 
+// demand[n] = ile z 24 monet węzeł chce dla siebie; dla mieszkańca to 24 − „zapłacę najwyżej”
+const L=()=>LEVELS[lvl];
+const isWell=n=>!!(L().wells&&L().wells.includes(n));
+const isVillager=n=>!!L().wells&&!isWell(n);
 function show(id,on){ $(id).classList.toggle("hidden",!on); }
+function fmt(v){ return Number.isInteger(v)?v:v.toFixed(1); }
+
+function sliderToDemand(v){ return isVillager(L().me)?TOTAL-v:v; }
+function setSliderLabel(){
+  const me=L().me;
+  $("demLbl").textContent=isWell(me)?"Cena wody:":isVillager(me)?"Zapłacę najwyżej:":"Chcę dla siebie:";
+  $("demVal").textContent=$("dem").value+" 🪙";
+}
 
 function startLevel(){
-  const L=LEVELS[lvl];
   rnd=0; demand={}; earn={}; last={}; deals=[]; predicted=null;
-  for(const n in L.nodes){ demand[n]=12; earn[n]=0; }
-  $("dem").value=12; $("demVal").textContent=12;
-  $("lvlName").textContent=L.name; $("lvlIntro").textContent=L.intro;
+  for(const n in L().nodes){ demand[n]=12; earn[n]=0; }
+  $("dem").value=12; setSliderLabel();
+  $("lvlName").textContent=L().name; $("lvlIntro").textContent=L().intro;
+  $("pLvlT").textContent=LEVELS.length;
   show("intro",false); show("lvlEnd",false); show("final",false); show("game",true);
   show("fb",false); show("nextBox",false);
-  show("predictBox",!!L.predict); show("playBox",!L.predict);
+  show("predictBox",!!L().predict); show("playBox",!L().predict);
   updateHead(); draw();
 }
 
 function updateHead(){
-  const L=LEVELS[lvl];
   $("pLvl").textContent=lvl+1; $("pRnd").textContent=Math.min(rnd+1,ROUNDS);
-  $("pPts").textContent=Math.round(earn[L.me]||0);
+  $("pPts").textContent=Math.round(earn[L().me]||0);
+}
+
+function botLabel(n){
+  if(isWell(n)) return "cena "+demand[n];
+  if(isVillager(n)) return "da najwyżej "+(TOTAL-demand[n]);
+  return "chce "+demand[n];
 }
 
 function draw(){
-  const L=LEVELS[lvl], svg=$("net"), picking=L.predict&&predicted===null;
+  const lv=L(), svg=$("net"), picking=lv.predict&&predicted===null;
   const inDeal=new Set(deals.flat());
   let h="";
-  for(const [a,b] of L.edges){
-    const [x1,y1]=L.nodes[a],[x2,y2]=L.nodes[b];
+  for(const [a,b] of lv.edges){
+    const [x1,y1]=lv.nodes[a],[x2,y2]=lv.nodes[b];
     const on=deals.some(([p,q])=>(p===a&&q===b)||(p===b&&q===a));
-    h+=`<line class="e${on?" deal":""}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+    const road=lv.road&&lv.road.includes(a)&&lv.road.includes(b);
+    h+=`<line class="e${on?" deal":""}${road?" road":""}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
   }
-  for(const n in L.nodes){
-    const [x,y]=L.nodes[n], me=n===L.me;
+  for(const n in lv.nodes){
+    const [x,y]=lv.nodes[n], me=n===lv.me, well=isWell(n);
     const out=rnd>0&&!inDeal.has(n);
-    const label=me?"ty":"chce "+demand[n];
-    const g=last[n]?`<text class="g" x="${x}" y="${y-28}">+${fmt(last[n])}</text>`:"";
-    h+=`<g class="nd${me?" me":""}${out?" out":""}${picking?" pick":""}" data-n="${n}">
+    const label=(well?"💧 studnia · ":"")+(me?"ty":botLabel(n));
+    const g=last[n]?`<text class="g" x="${x}" y="${y-28}">+${fmt(last[n])} 🪙</text>`:"";
+    h+=`<g class="nd${me?" me":""}${well?" well":""}${out?" out":""}${picking?" pick":""}" data-n="${n}">
       ${g}<circle cx="${x}" cy="${y}" r="20"/><text class="l" x="${x}" y="${y}">${n}</text>
       <text class="d" x="${x}" y="${y+36}">${label}</text></g>`;
   }
@@ -204,12 +238,10 @@ function draw(){
   });
 }
 
-function fmt(v){ return Number.isInteger(v)?v:v.toFixed(1); }
-
 function playRound(){
-  const L=LEVELS[lvl];
-  demand[L.me]=+$("dem").value;
-  const cand=L.edges.filter(([a,b])=>demand[a]+demand[b]<=TOTAL)
+  const lv=L();
+  demand[lv.me]=sliderToDemand(+$("dem").value);
+  const cand=lv.edges.filter(([a,b])=>demand[a]+demand[b]<=TOTAL)
     .map(e=>({e,s:TOTAL-demand[e[0]]-demand[e[1]],r:Math.random()}))
     .sort((x,y)=>y.s-x.s||x.r-y.r);
   const used=new Set(); deals=[]; last={};
@@ -218,16 +250,20 @@ function playRound(){
     used.add(e[0]); used.add(e[1]); deals.push(e);
     for(const n of e){ last[n]=demand[n]+s/2; earn[n]+=last[n]; }
   }
-  const myDeal=deals.find(e=>e.includes(L.me));
+  const myDeal=deals.find(e=>e.includes(lv.me));
   if(myDeal){
-    const p=myDeal[0]===L.me?myDeal[1]:myDeal[0];
-    $("fb").innerHTML=`Wymiana z <b>${p}</b>: dostajesz <b>${fmt(last[L.me])}</b> pkt.`;
+    const p=myDeal[0]===lv.me?myDeal[1]:myDeal[0], mine=last[lv.me], theirs=last[p];
+    if(isVillager(lv.me)) $("fb").innerHTML=`Kupujesz wodę u <b>${p}</b> za <b>${fmt(theirs)}</b> 🪙. W sakiewce zostaje ci <b>${fmt(mine)}</b> 🪙.`;
+    else if(isWell(lv.me)) $("fb").innerHTML=`Sprzedajesz wodę mieszkańcowi <b>${p}</b> za <b>${fmt(mine)}</b> 🪙.`;
+    else $("fb").innerHTML=`Umowa z <b>${p}</b>: dostajesz <b>${fmt(mine)}</b> 🪙 z 24.`;
   } else {
-    $("fb").innerHTML=`<b>Nikt nie przyjął twojej oferty.</b> 0 pkt w tej rundzie.`;
+    $("fb").innerHTML=isVillager(lv.me)
+      ? `<b>Nikt nie sprzedał ci wody.</b> W tej rundzie nic nie zostaje w sakiewce.`
+      : `<b>Nikt nie przyjął twojej oferty.</b> 0 🪙 w tej rundzie.`;
   }
   show("fb",true);
-  for(const n in L.nodes){
-    if(n===L.me) continue;
+  for(const n in lv.nodes){
+    if(n===lv.me) continue;
     demand[n]=used.has(n)?Math.min(22,demand[n]+1):Math.max(2,demand[n]-2);
   }
   rnd++;
@@ -236,12 +272,15 @@ function playRound(){
 }
 
 function endLevel(){
-  const L=LEVELS[lvl];
-  results.push({name:L.name,pts:Math.round(earn[L.me])});
-  const order=Object.keys(L.nodes).sort((a,b)=>earn[b]-earn[a]);
-  $("lvlRows").innerHTML=order.map(n=>`<tr class="${n===L.me?"me":""}"><td>${n}${n===L.me?" (ty)":""}</td><td class="num">${Math.round(earn[n])}</td></tr>`).join("");
+  const lv=L();
+  results.push({name:lv.name,pts:Math.round(earn[lv.me])});
+  const order=Object.keys(lv.nodes).sort((a,b)=>earn[b]-earn[a]);
+  const role=n=>isWell(n)?" · studnia":"";
+  $("lvlRows").innerHTML=order.map(n=>`<tr class="${n===lv.me?"me":""}"><td>${n}${role(n)}${n===lv.me?" (ty)":""}</td><td class="num">${Math.round(earn[n])}</td></tr>`).join("");
   let note="";
-  if(L.predict) note=`Twój typ: <b>${predicted}</b>. Najwięcej: <b>${order[0]}</b>.`;
+  if(lv.predict) note=`Twój typ: <b>${predicted}</b>. Najwięcej: <b>${order[0]}</b>.`;
+  if(lv.compare!==undefined&&results[lv.compare])
+    note=`Na planszy ${lv.compare+1}, bez drogi do drugiej studni, jako A zostało ci <b>${results[lv.compare].pts}</b> 🪙. Teraz: <b>${Math.round(earn[lv.me])}</b> 🪙.`;
   $("lvlEndNote").innerHTML=note;
   $("bLvlNext").textContent=lvl<LEVELS.length-1?"Następna plansza ▸":"Podsumowanie ▸";
   show("game",false); show("lvlEnd",true);
@@ -252,7 +291,7 @@ function final(){
   show("lvlEnd",false); show("final",true);
 }
 
-$("dem").oninput=()=>{ $("demVal").textContent=$("dem").value; };
+$("dem").oninput=setSliderLabel;
 $("bStart").onclick=()=>{ lvl=0; results=[]; startLevel(); };
 $("bRound").onclick=playRound;
 $("bNext").onclick=endLevel;
