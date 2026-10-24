@@ -74,8 +74,9 @@
       <li>Mieszkaniec przychodzi do studni po <b>24 wiadra</b> wody 🪣. Właściciel studni
         zatrzymuje część z nich jako opłatę i sprzedaje na targu: 1 wiadro = 1 moneta 🪙.</li>
       <li>Właściciel ustala <b>opłatę</b>, mieszkaniec mówi, ile wiader <b>chce zanieść do domu</b>.
-        Jeśli razem mieści się to w 24 wiadrach, wymiana dochodzi do skutku, a nadwyżkę dzielą
-        po połowie.</li>
+        Jeśli razem nie przekracza to 24 wiader, wymiana dochodzi do skutku. Wiadra, których nikt
+        nie zażądał, dzielą po połowie. <i>Przykład: opłata 10, mieszkaniec chce 8, zostaje 6 wolnych:
+        mieszkaniec zanosi 11, studnia bierze 13.</i></li>
       <li>Studnia w jednej rundzie obsługuje <b>tylko jednego</b> mieszkańca. Gdy chętnych jest
         więcej, wybiera tego, kto zostawia jej najwięcej.</li>
       <li>Pozostali gracze to boty, ich oferty na najbliższą rundę widzisz pod kółkami. Kto
@@ -248,9 +249,13 @@ function playRound(){
   const myDeal=deals.find(e=>e.includes(lv.me));
   if(myDeal){
     const p=myDeal[0]===lv.me?myDeal[1]:myDeal[0];
+    const free=TOTAL-played[lv.me]-played[p];
+    const split=free>0
+      ? `Zostało ${free} wolnych, po ${fmt(free/2)} dla każdego, więc`
+      : `Wolnych wiader nie zostało, więc`;
     $("fb").innerHTML=isWell(lv.me)
-      ? `<b>${p}</b> bierze wodę. Opłata: <b>${fmt(last[lv.me])}</b> 🪣 = <b>${fmt(last[lv.me])}</b> 🪙.`
-      : `Bierzesz wodę u <b>${p}</b>. Otrzymujesz <b>${fmt(last[lv.me])}</b> 🪣, opłata dla ${p}: ${fmt(last[p])} 🪣.`;
+      ? `<b>${p}</b> bierze wodę. ${p} chciał zanieść ${played[p]} 🪣, twoja opłata ${played[lv.me]} 🪣. ${split} bierzesz <b>${fmt(last[lv.me])}</b> 🪣 = <b>${fmt(last[lv.me])}</b> 🪙.`
+      : `Bierzesz wodę u <b>${p}</b>. Chcesz zanieść ${played[lv.me]} 🪣, opłata u ${p} to ${played[p]} 🪣. ${split} zanosisz <b>${fmt(last[lv.me])}</b> 🪣.`;
   } else {
     $("fb").innerHTML=`<b>${isWell(lv.me)?"Nikt nie wziął wody.":"Nie dostajesz wody w tej rundzie."}</b> ${whyNot(lv.me)}`;
   }
