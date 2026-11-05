@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pięć okularów — jeden przypadek</title>
+<style>
+  :root{
+    --bg:#f9f9f7; --card:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+    --border:rgba(11,11,11,.10); --accent:#2a78d6; --truth:#e34948;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --bg:#0d0d0d; --card:#1a1a19; --ink:#fff; --ink2:#c3c2b7;
+      --border:rgba(255,255,255,.10); --accent:#3987e5; --truth:#e66767; }
+  }
+  :root[data-theme="dark"]{ --bg:#0d0d0d; --card:#1a1a19; --ink:#fff; --ink2:#c3c2b7;
+    --border:rgba(255,255,255,.10); --accent:#3987e5; --truth:#e66767; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}
+  .wrap{max-width:560px;margin:0 auto;padding:16px 14px 40px}
+  h1{font-size:1.35rem;margin:.2rem 0 .1rem}
+  h2{font-size:1.05rem;margin:0 0 6px}
+  .sub{color:var(--ink2);font-size:.92rem;margin:0 0 14px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:14px;margin-bottom:12px}
+  .muted{color:var(--ink2);font-size:.92rem;margin:4px 0}
+  .prog{display:flex;justify-content:space-between;font-size:.9rem;color:var(--ink2);margin-bottom:8px}
+  .prog b{color:var(--ink)}
+  .obs{font-size:1.05rem;font-weight:600;margin:4px 0 10px}
+  .lenses{display:grid;grid-template-columns:1fr;gap:7px}
+  button{padding:12px 10px;font-size:.98rem;font-weight:700;border-radius:10px;text-align:left;
+    border:1px solid var(--border);background:var(--card);color:var(--ink);cursor:pointer;min-height:48px}
+  button small{display:block;font-weight:400;color:var(--ink2);font-size:.82rem}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;text-align:center;width:100%}
+  button.best{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
+  button.also{border-style:dashed;border-color:var(--accent)}
+  button.wrong{border-color:var(--truth)}
+  button:disabled{cursor:default}
+  .fb{border-radius:12px;padding:12px;margin-top:10px;font-size:.95rem;
+    background:var(--bg);border:1px solid var(--border)}
+  .fb .res{font-weight:700}
+  .btns{margin-top:10px}
+  table{width:100%;border-collapse:collapse;font-size:.92rem}
+  th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--border)}
+  th{color:var(--muted);font-weight:600}
+  td.num{font-variant-numeric:tabular-nums;text-align:right}
+  .hidden{display:none}
+  details{margin-top:6px} summary{cursor:pointer;font-weight:600}
+  details p{color:var(--ink2);font-size:.92rem}
+  .foot{color:var(--muted);font-size:.8rem;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🕹️ Pięć okularów</h1>
+  <p class="sub">Jeden przypadek, pięć optyk · Społeczeństwo sieci</p>
+
+  <div class="card" id="intro">
+    <p class="muted">Dostaniesz kilkanaście obserwacji o <b>Strajku Kobiet 2020</b>. Do każdej
+    wybierz optykę, która widzi ją najlepiej. Niektóre obserwacje widać przez dwoje okularów —
+    to normalne i warto się o to spierać.</p>
+    <p class="muted">Patrzymy na <b>mechanizm mobilizacji</b>, nie na spór o aborcję.</p>
+    <div class="btns"><button class="primary" id="bStart">Zaczynamy</button></div>
+  </div>
+
+  <div class="card hidden" id="game">
+    <div class="prog"><span>obserwacja <b id="pN">1</b> / <span id="pT"></span></span>
+      <span>trafienia: <b id="pS">0</b></span></div>
+    <div class="obs" id="obs"></div>
+    <div class="lenses" id="lenses"></div>
+    <div class="fb hidden" id="fb"></div>
+    <div class="btns hidden" id="nextBox"><button class="primary" id="bNext">Dalej ▸</button></div>
+  </div>
+
+  <div class="card hidden" id="sum">
+    <h2>Twoje okulary</h2>
+    <table><thead><tr><th>optyka</th><th style="text-align:right">tyle razy ją wybrano</th></tr></thead>
+      <tbody id="sumRows"></tbody></table>
+    <p class="muted" id="sumNote"></p>
+    <div class="fb">
+      <div class="res">Czego nie widzi żadna z pięciu?</div>
+      Zanim przejdziemy do ćwiczenia na sali, zapisz jedną rzecz o tym proteście, której żadne
+      z tych okularów nie łapie. Podpowiedź: wszystkie pięć mówi, <i>jak</i> ludzie się
+      połączyli. Żadna nie mówi, <i>dlaczego</i> chcieli wyjść na ulicę.
+    </div>
+    <div class="btns"><button id="bAgain">Zagraj jeszcze raz</button></div>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>Po co ta gra? (debriefing)</summary>
+      <p>Każda optyka z Modułu I wydobywa z tego samego przypadku coś innego: <b>analiza sieci
+      społecznych</b> — więzi i mosty, <b>nowa nauka sieci</b> — huby i nierówny rozkład,
+      <b>teoria wymiany</b> — zależność i kontrolę przepływu, <b>teoria aktora-sieci</b> — rzeczy,
+      które działają, <b>teoria społeczeństwa sieci</b> — pytanie, czy to forma całej epoki.</p>
+      <p>Obserwacje sporne (dwie dobre odpowiedzi) pokazują, gdzie optyki się zachodzą.
+      Ostatnia karta pokazuje, czego żadna nie widzi. To pierwszy ruch zadania zaliczeniowego:
+      co ta optyka dodaje, a czego nie widzi.</p>
+      <p><b>Uwaga do kart 11 i 12:</b> rozpoznawalne liderki i stara forma strajku to argument
+      dla van Dijka (sieć przenika dawne struktury, nie zastępuje ich), a nie ilustracja modelu
+      „ruchu bez liderów”.</p>
+    </details>
+  </div>
+
+  <p class="foot">Obserwacje streszczają fakty zebrane na zajęciach; część (oznaczona „pytanie”)
+  to hipoteza do dyskusji, nie ustalenie. Nic nie jest zapisywane ani wysyłane.
+  Społeczeństwo sieci · AGH.</p>
+</div>
+
+<script>
+"use strict";
+// === OPTYKI I OBSERWACJE (edytuj tutaj) ===
+const LENSES={
+  sna:{n:"Analiza sieci społecznych",h:"więzi, mosty, domknięcie"},
+  nns:{n:"Nowa nauka sieci",h:"huby, mały świat, nierówny rozkład"},
+  wym:{n:"Sieciowa teoria wymiany",h:"zależność, alternatywy, kontrola przepływu"},
+  ant:{n:"Teoria aktora-sieci",h:"rzeczy jako uczestnicy, skrypt"},
+  tss:{n:"Teoria społeczeństwa sieci",h:"sieć jako forma całej epoki"}
+};
+const OBS=[
+  {t:"W małym mieście pierwszy protest organizują osoby, które znają się ze szkoły i z pracy i sobie ufają.",best:"sna",also:[],
+   why:"Domknięcie: gęsta grupa, w której wszyscy się znają. Tak zaczyna się protest tam, gdzie nie ma dużych organizacji."},
+  {t:"O proteście dowiaduje się ciotka — od kuzynki z innego miasta, z którą rozmawia dwa razy w roku.",best:"sna",also:[],
+   why:"Słaba więź: przynosi informację spoza własnego kręgu (Granovetter)."},
+  {t:"Większość informacji o terminach rozchodzi się przez profil OSK i kilka dużych kont.",best:"nns",also:["wym"],
+   why:"Huby: garstka węzłów obsługuje większość ruchu. Teoria wymiany dopyta, czy inni mieli alternatywy."},
+  {t:"28 X 2020 policja odnotowała ok. 410 protestów — kilka wielkich marszów i setki zgromadzeń po kilkadziesiąt osób.",best:"nns",also:["sna"],
+   why:"Długi ogon: kilka ogromnych węzłów i bardzo wiele małych. Rozkład nierówny, nie „dzwon”."},
+  {t:"Pytanie: czy lokalna grupa mogła zorganizować protest bez kanałów OSK?",best:"wym",also:[],
+   why:"Pytanie o alternatywy: zależność rośnie, gdy nie ma innej drogi."},
+  {t:"Wyrok czeka na publikację od 3 XI 2020 do 27 I 2021. Termin ustala państwo.",best:"wym",also:[],
+   why:"Kontrola czasu: kto ustala termin, ustala warunki dla drugiej strony. Władza z pozycji, nie z cech osób."},
+  {t:"W pandemii obowiązują ograniczenia zgromadzeń.",best:"wym",also:["ant"],
+   why:"Kontrola przestrzeni po stronie państwa. ANT dorzuci: przepisy sanitarne są uczestnikiem, który zmienia repertuar."},
+  {t:"Czerwona błyskawica, udostępniona do swobodnego użytku, trafia na tysiące zdjęć profilowych.",best:"ant",also:[],
+   why:"Symbol, plik i licencja działają: to dzięki swobodnemu użyciu znak się rozszedł (wskazuje na to sama autorka)."},
+  {t:"Ruch zmienia formy: protesty samochodowe i rowerowe, blokady ulic.",best:"ant",also:[],
+   why:"Samochód, rower i ograniczenia sanitarne zmieniają to, co da się zrobić. Rzeczy współtworzą działanie."},
+  {t:"Facebook jest główną platformą OSK.",best:"ant",also:["wym"],
+   why:"Platforma jako uczestnik mobilizacji (ANT). Teoria wymiany zapyta: kto od kogo zależy i czy była alternatywa?"},
+  {t:"Ruch skrzykuje się w sieci i zajmuje przestrzeń miasta — jak ruchy oburzenia ostatniej dekady.",best:"tss",also:[],
+   why:"Model ruchów sieciowych Castellsa: oburzenie, sieci online, zajęcie przestrzeni miasta."},
+  {t:"Ruch ma rozpoznawalne liderki i organizację, a hasło „Nie idę do roboty” sięga po starą formę strajku.",best:"tss",also:[],
+   why:"Test, nie ilustracja: model „ruchu bez liderów” tu nie pasuje. Argument dla van Dijka — sieć przenika dawne struktury, nie zastępuje ich."}
+];
+// ===========================================
+const $=id=>document.getElementById(id);
+let i=0, score=0, picks={};
+
+function show(id,on){ $(id).classList.toggle("hidden",!on); }
+function start(){ i=0; score=0; picks={}; for(const k in LENSES) picks[k]=0;
+  $("pT").textContent=OBS.length; show("intro",false); show("sum",false); show("game",true); step(); }
+function step(){
+  const o=OBS[i];
+  $("pN").textContent=i+1; $("pS").textContent=score; $("obs").textContent=o.t;
+  $("lenses").innerHTML=Object.entries(LENSES).map(([k,l])=>
+    `<button data-k="${k}">${l.n}<small>${l.h}</small></button>`).join("");
+  $("lenses").querySelectorAll("button").forEach(b=>b.onclick=()=>answer(b.dataset.k));
+  show("fb",false); show("nextBox",false);
+}
+function answer(k){
+  const o=OBS[i], ok=k===o.best||o.also.includes(k);
+  picks[k]++; if(ok) score++;
+  $("lenses").querySelectorAll("button").forEach(b=>{
+    const kk=b.dataset.k; b.disabled=true;
+    if(kk===o.best) b.classList.add("best");
+    else if(o.also.includes(kk)) b.classList.add("also");
+    else if(kk===k) b.classList.add("wrong");
+  });
+  const also=o.also.length?` Też dobrze: ${o.also.map(a=>LENSES[a].n).join(", ")}.`:"";
+  $("fb").innerHTML=`<div class="res">${ok?"✓ ":""}Najlepiej widzi to: ${LENSES[o.best].n}.${also}</div><div>${o.why}</div>`;
+  $("pS").textContent=score; show("fb",true); show("nextBox",true);
+}
+$("bNext").onclick=()=>{ i++; if(i<OBS.length) step(); else summary(); };
+function summary(){
+  $("sumRows").innerHTML=Object.entries(LENSES).map(([k,l])=>
+    `<tr><td>${l.n}</td><td class="num">${picks[k]}</td></tr>`).join("");
+  $("sumNote").innerHTML=`Trafienia: <b>${score} / ${OBS.length}</b>. Po które okulary sięgasz najczęściej — a których prawie nie używasz?`;
+  show("game",false); show("sum",true);
+}
+$("bStart").onclick=start;
+$("bAgain").onclick=start;
+</script>
+</body>
+</html>
