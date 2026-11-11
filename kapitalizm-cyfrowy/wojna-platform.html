@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wojna platform — symulator przechyłu rynku</title>
+<style>
+  :root{
+    --bg:#f9f9f7; --card:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+    --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,.10);
+    --sA:#2a78d6; --sB:#1baf7a; --sBoth:#4a3aa7; --sNone:#d6d5cf;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0d0d0d; --card:#1a1a19; --ink:#ffffff; --ink2:#c3c2b7;
+      --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
+      --sA:#3987e5; --sB:#199e70; --sBoth:#9085e9; --sNone:#383835;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}
+  .wrap{max-width:680px;margin:0 auto;padding:16px 14px 40px}
+  h1{font-size:1.35rem;margin:.2rem 0 .1rem}
+  .sub{color:var(--ink2);font-size:.92rem;margin:0 0 14px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:14px;margin-bottom:12px}
+  .mission{border-left:4px solid var(--sA)}
+  .mission b{display:block;margin-bottom:2px}
+  label{display:block;font-size:.88rem;color:var(--ink2);margin:10px 0 2px}
+  label output{color:var(--ink);font-weight:600;float:right}
+  input[type=range]{width:100%;accent-color:var(--sA)}
+  .check{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:.92rem;color:var(--ink2)}
+  .check input{width:20px;height:20px;accent-color:var(--sA)}
+  .btns{display:flex;gap:8px;margin-top:8px}
+  button{flex:1;padding:12px 8px;font-size:1rem;font-weight:600;border-radius:10px;
+    border:1px solid var(--border);background:var(--card);color:var(--ink);cursor:pointer;min-height:48px}
+  button.primary{background:var(--sA);border-color:var(--sA);color:#fff}
+  button:active{transform:translateY(1px)}
+  canvas{width:100%;height:auto;display:block;touch-action:none}
+  .status{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.9rem;margin-top:8px}
+  .dotlbl{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .verdict{margin-top:10px;padding:10px 12px;border-radius:10px;font-weight:600;display:none;
+    background:var(--bg);border:1px solid var(--border)}
+  .foot{color:var(--muted);font-size:.8rem;margin-top:18px}
+  details{margin-top:6px}
+  summary{cursor:pointer;font-weight:600}
+  details p{color:var(--ink2);font-size:.92rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🕹️ Wojna platform</h1>
+  <p class="sub">Symulator efektów sieciowych · Kapitalizm cyfrowy, spotkanie 6</p>
+
+  <div class="card mission">
+    <b>Twoja misja</b>
+    Dwie platformy o (prawie) tej samej jakości walczą o 400 użytkowników.
+    Znajdź <b>najmniejszą siłę efektu sieciowego</b>, przy której rynek regularnie
+    „się przechyla" i zwycięzca bierze wszystko. Potem sprawdź: czy wysoka jakość
+    pretendenta (B) potrafi pokonać efekt sieciowy? A multi-homing?
+  </div>
+
+  <div class="card">
+    <label>Siła efektu sieciowego <output id="oW">1.0</output></label>
+    <input type="range" id="w" min="0" max="3" step="0.1" value="1.0">
+    <label>Koszt przejścia (lock-in) <output id="oC">0.5</output></label>
+    <input type="range" id="c" min="0" max="2" step="0.1" value="0.5">
+    <label>Przewaga jakości platformy B <output id="oQ">+0.0</output></label>
+    <input type="range" id="q" min="-0.5" max="0.5" step="0.05" value="0">
+    <div class="check">
+      <input type="checkbox" id="mh">
+      <span><b>Multi-homing dozwolony</b> — użytkownik może być na obu platformach naraz</span>
+    </div>
+    <div class="btns">
+      <button class="primary" id="bAuto">▶ Start</button>
+      <button id="bStep">Krok</button>
+      <button id="bReset">Reset</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <canvas id="grid" width="640" height="320" aria-label="Populacja użytkowników"></canvas>
+    <div class="status">
+      <span class="dotlbl"><span class="dot" style="background:var(--sA)"></span>Platforma A: <b id="stA">0%</b></span>
+      <span class="dotlbl"><span class="dot" style="background:var(--sB)"></span>Platforma B: <b id="stB">0%</b></span>
+      <span class="dotlbl"><span class="dot" style="background:var(--sBoth)"></span>obie: <b id="stAB">0%</b></span>
+      <span class="dotlbl"><span class="dot" style="background:var(--sNone)"></span>poza rynkiem: <b id="st0">100%</b></span>
+      <span>runda: <b id="stR">0</b></span>
+    </div>
+    <div class="verdict" id="verdict"></div>
+  </div>
+
+  <div class="card">
+    <b style="font-size:.9rem">Udziały w populacji (%)</b>
+    <canvas id="chart" width="640" height="180" aria-label="Wykres udziałów platform w czasie"></canvas>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>Jak działa ten model?</summary>
+      <p>Co rundę część użytkowników ponownie wybiera platformę. Użyteczność platformy =
+      jej jakość + <i>siła efektu sieciowego × udział w rynku</i> + losowe preferencje.
+      Zmiana platformy kosztuje (lock-in). Przy multi-homingu można należeć do obu,
+      więc efekt sieciowy przestaje być wyłączny.</p>
+      <p><b>Do dyskusji:</b> które suwaki odpowiadają realnym strategiom platform —
+      subsydiowanie wzrostu, utrudnianie eksportu danych, zwalczanie interoperacyjności?</p>
+    </details>
+  </div>
+
+  <p class="foot">Model poglądowy do celów dydaktycznych. Kapitalizm cyfrowy · AGH.</p>
+</div>
+
+<script>
+"use strict";
+const N = 400, COLS = 25, ROWS = 16;
+const NONE=0, A=1, B=2, BOTH=3;
+let users, round, tippedAt, histA, histB, timer=null;
+
+const $ = id => document.getElementById(id);
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const gumbel = s => -Math.log(-Math.log(Math.random()+1e-12)+1e-12)*s;
+
+function reset(){
+  users = new Array(N).fill(NONE);
+  round = 0; tippedAt = null; histA=[0]; histB=[0];
+  stopAuto(); $("verdict").style.display="none";
+  draw();
+}
+function shares(){
+  let a=0,b=0,both=0;
+  for(const u of users){ if(u===A)a++; else if(u===B)b++; else if(u===BOTH)both++; }
+  return {a:(a+both)/N, b:(b+both)/N, exA:a/N, exB:b/N, both:both/N, none:1-(a+b+both)/N};
+}
+function step(){
+  const w=+$("w").value, c=+$("c").value, qB=1+ +$("q").value, qA=1, mh=$("mh").checked;
+  const s = shares(), NOISE=0.35, U0=0.55;
+  for(let i=0;i<N;i++){
+    if(Math.random()>0.25) continue;           // co rundę decyduje ~25% populacji
+    const cur = users[i];
+    const uA = qA + w*s.a + gumbel(NOISE);
+    const uB = qB + w*s.b + gumbel(NOISE);
+    const u0 = U0 + gumbel(NOISE);
+    if(mh){
+      const onA = uA > u0, onB = uB > u0;
+      users[i] = onA && onB ? BOTH : onA ? A : onB ? B : NONE;
+    }else{
+      const pA = uA - (cur!==A && cur!==NONE ? c : 0);
+      const pB = uB - (cur!==B && cur!==NONE ? c : 0);
+      users[i] = (u0>=pA && u0>=pB) ? NONE : (pA>=pB ? A : B);
+    }
+  }
+  round++;
+  const s2 = shares();
+  histA.push(s2.a*100); histB.push(s2.b*100);
+  const adopted = 1-s2.none;
+  if(!tippedAt && adopted>0.5 && !$("mh").checked){
+    const top = Math.max(s2.a,s2.b);
+    if(top/adopted > 0.85){ tippedAt = round;
+      const winner = s2.a>s2.b ? "A" : "B";
+      const v=$("verdict"); v.style.display="block";
+      v.textContent = `⚖️ Rynek przechylony → platforma ${winner} (runda ${round}). Zwycięzca bierze wszystko.`;
+    }
+  }
+  draw();
+  if(round>=200) stopAuto();
+}
+function draw(){
+  const s = shares();
+  $("stA").textContent = Math.round(s.exA*100)+"%";
+  $("stB").textContent = Math.round(s.exB*100)+"%";
+  $("stAB").textContent = Math.round(s.both*100)+"%";
+  $("st0").textContent = Math.round(s.none*100)+"%";
+  $("stR").textContent = round;
+  // siatka populacji
+  const cv=$("grid"), ctx=cv.getContext("2d");
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const cw=cv.width/COLS, ch=cv.height/ROWS;
+  const colors=[css("--sNone"),css("--sA"),css("--sB"),css("--sBoth")];
+  for(let i=0;i<N;i++){
+    const x=(i%COLS)*cw+cw/2, y=Math.floor(i/COLS)*ch+ch/2;
+    ctx.beginPath(); ctx.arc(x,y,Math.min(cw,ch)*0.32,0,7);
+    ctx.fillStyle=colors[users[i]]; ctx.fill();
+  }
+  drawChart();
+}
+function drawChart(){
+  const cv=$("chart"), ctx=cv.getContext("2d");
+  const W=cv.width,H=cv.height,L=34,R=44,T=10,Bm=22;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle=css("--grid"); ctx.lineWidth=1;
+  ctx.fillStyle=css("--muted"); ctx.font="11px system-ui"; ctx.textAlign="right";
+  for(const p of [0,25,50,75,100]){
+    const y=T+(H-T-Bm)*(1-p/100);
+    ctx.beginPath(); ctx.moveTo(L,y); ctx.lineTo(W-R,y); ctx.stroke();
+    ctx.fillText(p, L-6, y+4);
+  }
+  const n=histA.length; if(n<2) return;
+  const x=i=>L+(W-L-R)*i/(n-1), y=v=>T+(H-T-Bm)*(1-v/100);
+  const line=(h,col,lbl)=>{
+    ctx.strokeStyle=col; ctx.lineWidth=2; ctx.beginPath();
+    h.forEach((v,i)=>i?ctx.lineTo(x(i),y(v)):ctx.moveTo(x(i),y(v)));
+    ctx.stroke();
+    ctx.fillStyle=col; ctx.textAlign="left"; ctx.font="600 12px system-ui";
+    ctx.fillText(lbl+" "+Math.round(h[n-1])+"%", W-R+4, y(h[n-1])+4);
+  };
+  line(histA,css("--sA"),"A");
+  line(histB,css("--sB"),"B");
+}
+function stopAuto(){ if(timer){clearInterval(timer);timer=null;} $("bAuto").textContent="▶ Start"; }
+$("bAuto").onclick=()=>{ if(timer){stopAuto();} else {timer=setInterval(step,220); $("bAuto").textContent="⏸ Pauza";} };
+$("bStep").onclick=step;
+$("bReset").onclick=reset;
+for(const [id,out,fmt] of [["w","oW",v=>(+v).toFixed(1)],["c","oC",v=>(+v).toFixed(1)],["q","oQ",v=>(v>=0?"+":"")+(+v).toFixed(2)]])
+  $(id).oninput=e=>$(out).textContent=fmt(e.target.value);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+reset();
+</script>
+</body>
+</html>

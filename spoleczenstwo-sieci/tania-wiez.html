@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tania więź — co cena więzi robi z siecią</title>
+<style>
+  :root{
+    --bg:#f9f9f7; --card:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+    --border:rgba(11,11,11,.10); --accent:#2a78d6; --truth:#e34948; --line:#a9a89f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0d0d0d; --card:#1a1a19; --ink:#fff; --ink2:#c3c2b7;
+      --border:rgba(255,255,255,.10); --accent:#3987e5; --truth:#e66767; --line:#6a6a64; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}
+  .wrap{max-width:560px;margin:0 auto;padding:16px 14px 40px}
+  h1{font-size:1.35rem;margin:.2rem 0 .1rem}
+  h2{font-size:1.05rem;margin:0 0 6px}
+  .sub{color:var(--ink2);font-size:.92rem;margin:0 0 14px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:14px;margin-bottom:12px}
+  .muted{color:var(--ink2);font-size:.92rem;margin:4px 0}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin-bottom:8px}
+  .stats div{border:1px solid var(--border);border-radius:10px;padding:6px 2px}
+  .stats b{display:block;font-size:1.05rem;font-variant-numeric:tabular-nums}
+  .stats span{font-size:.72rem;color:var(--ink2)}
+  svg{width:100%;height:auto;display:block;touch-action:manipulation}
+  line.e{stroke:var(--line);stroke-width:2.5}
+  .nd{cursor:pointer}
+  .nd circle{fill:var(--card);stroke:var(--ink2);stroke-width:1.5}
+  .nd text{text-anchor:middle;dominant-baseline:central;font-size:14px;fill:var(--ink);pointer-events:none}
+  .nd.sel circle{stroke:var(--accent);stroke-width:4}
+  .nd.src circle{fill:var(--accent);stroke:var(--accent)} .nd.src text{fill:#fff}
+  .nd.gone circle{fill:var(--truth);stroke:var(--truth)} .nd.gone text{fill:#fff}
+  .nd.cut circle{stroke:var(--truth);stroke-width:2.5;stroke-dasharray:3 3}
+  .fb{border-left:4px solid var(--accent);background:var(--bg);border-radius:8px;padding:10px 12px;margin:8px 0;font-size:.95rem}
+  .fb.bad{border-left-color:var(--truth)}
+  .btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  button{flex:1;padding:13px 8px;font-size:1rem;font-weight:700;border-radius:10px;
+    border:1px solid var(--border);background:var(--card);color:var(--ink);cursor:pointer;min-height:50px}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .three div{text-align:center;font-size:.78rem;color:var(--ink2)}
+  table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:8px}
+  td,th{padding:6px 4px;border-bottom:1px solid var(--border);text-align:right;font-variant-numeric:tabular-nums}
+  td:first-child,th:first-child{text-align:left}
+  th{font-weight:600;color:var(--ink2);font-size:.8rem}
+  .hidden{display:none}
+  details{margin-top:6px} summary{cursor:pointer;font-weight:600}
+  details p{color:var(--ink2);font-size:.92rem}
+  .foot{color:var(--muted);font-size:.8rem;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🕹️ Tania więź</h1>
+  <p class="sub">Co cena więzi robi z siecią · Społeczeństwo sieci</p>
+
+  <div class="card" id="main"></div>
+
+  <div class="card">
+    <details>
+      <summary>Po co ta gra? (debriefing)</summary>
+      <p><b>Kształt sieci zależy od ceny więzi.</b> W pierwszej rundzie stać cię było dokładnie na
+      tyle więzi, żeby wiadomość dotarła do wszystkich. Wyszło drzewo: każdy ma jedną drogę do
+      nadawcy, a usunięcie jednego węzła odcina całą gałąź. Nikt nie postanowił „zbudować
+      hierarchii”. Wyszła z ceny.</p>
+      <p><b>Kiedy więź tanieje,</b> te same osoby dostają drogi zapasowe. Wiadomość idzie krócej,
+      a sieć przestaje zależeć od jednego węzła.</p>
+      <p><b>Pytanie:</b> sieci są stare. Co musiało się zmienić, żeby dało się na nich oprzeć
+      całą gospodarkę?</p>
+      <p><b>Uwaga:</b> to model i nasze odczytanie. Castells pisze o logice sieci jako formie
+      dobrze dopasowanej do złożoności; gra pokazuje jeden możliwy powód, dla którego wcześniej
+      wygrywały inne formy.</p>
+    </details>
+  </div>
+
+  <p class="foot">Sieć, budżet i ceny są modelowe. Nic nie jest zapisywane ani wysyłane.
+  Społeczeństwo sieci · AGH.</p>
+</div>
+
+<script>
+"use strict";
+// === PARAMETRY (edytuj tutaj) ===
+const N=10, BUDGET=180, PRICES=[20,12,7];
+const NAMES="ABCDEFGHIJ";
+// =================================
+const $=id=>document.getElementById(id);
+let S;
+function newState(){ return {phase:"intro",round:0,links:new Set(),sel:null,msg:"",bad:false,snaps:[]}; }
+function getS(){ return S; }
+const key=(a,b)=>a<b?a+"-"+b:b+"-"+a;
+const price=()=>PRICES[S.round];
+const left=()=>BUDGET-S.links.size*price();
+
+function adj(links,skip){
+  const a=Array.from({length:N},()=>[]);
+  links.forEach(k=>{ const [x,y]=k.split("-").map(Number);
+    if(x===skip||y===skip) return; a[x].push(y); a[y].push(x); });
+  return a;
+}
+function bfs(a,start){
+  const d=Array(N).fill(-1); d[start]=0; const q=[start];
+  while(q.length){ const u=q.shift(); a[u].forEach(v=>{ if(d[v]<0){ d[v]=d[u]+1; q.push(v); } }); }
+  return d;
+}
+function metrics(links){
+  const a=adj(links,-1), d=bfs(a,0);
+  const reached=d.filter(x=>x>=0).length;
+  const steps=d.filter(x=>x>0);
+  const avg=steps.length?steps.reduce((s,x)=>s+x,0)/steps.length:0;
+  // usuwamy węzeł o największej liczbie więzi
+  let hub=0; a.forEach((l,i)=>{ if(l.length>a[hub].length) hub=i; });
+  const b=adj(links,hub); let best=[];
+  const seen=new Set([hub]);
+  for(let i=0;i<N;i++){ if(seen.has(i)) continue;
+    const dd=bfs(b,i), comp=[]; dd.forEach((x,j)=>{ if(x>=0&&j!==hub){ comp.push(j); seen.add(j); } });
+    if(comp.length>best.length) best=comp; }
+  return {n:links.size,reached,avg,hub,surv:best.length,comp:best};
+}
+
+function pos(i,r,c){ const t=(-90+i*360/N)*Math.PI/180; return [c+r*Math.cos(t),c+r*Math.sin(t)]; }
+function draw(links,o){
+  o=o||{}; const c=160,r=122,nr=o.small?17:19;
+  let h=`<svg viewBox="0 0 320 320" role="img" aria-label="sieć">`;
+  links.forEach(k=>{ const [x,y]=k.split("-").map(Number);
+    if(o.m&&(x===o.m.hub||y===o.m.hub)) return;
+    const p=pos(x,r,c),q=pos(y,r,c);
+    h+=`<line class="e" x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${q[0].toFixed(1)}" y2="${q[1].toFixed(1)}"/>`; });
+  for(let i=0;i<N;i++){ const p=pos(i,r,c); let cl="nd";
+    if(o.m){ if(i===o.m.hub) cl+=" gone"; else if(!o.m.comp.includes(i)) cl+=" cut"; }
+    else { if(i===0) cl+=" src"; if(i===o.sel) cl+=" sel"; }
+    h+=`<g class="${cl}"${o.live?` data-a="node" data-v="${i}"`:""}><circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${nr}"/>`+
+       `<text x="${p[0].toFixed(1)}" y="${p[1].toFixed(1)}">${NAMES[i]}</text></g>`; }
+  return h+"</svg>";
+}
+const fmt=x=>x.toFixed(1).replace(".",",");
+
+function render(){
+  let h="";
+  if(S.phase==="intro"){
+    h=`<p class="muted">Dziesięć osób. Osoba <b>A</b> ma wiadomość, która musi dotrzeć do wszystkich.
+      Wiadomość idzie tylko po więziach.</p>
+      <p class="muted"><b>Jak grać:</b> stuknij dwie osoby, żeby narysować między nimi więź. Stuknij
+      tę samą parę jeszcze raz, żeby ją usunąć. Każda więź kosztuje, a budżet na rundę to
+      ${BUDGET}.</p>
+      <p class="muted">Grasz trzy rundy na tej samej sieci. W każdej rundzie więź jest tańsza:
+      ${PRICES.join(", potem ")}.</p>
+      <div class="btns"><button class="primary" data-a="start">Zaczynam</button></div>`;
+  } else if(S.phase==="play"){
+    h=`<div class="stats"><div><b>${S.round+1} / 3</b><span>runda</span></div>
+      <div><b>${price()}</b><span>cena więzi</span></div>
+      <div><b>${S.links.size}</b><span>więzi</span></div>
+      <div><b>${left()}</b><span>zostało</span></div></div>`+
+      draw(S.links,{live:true,sel:S.sel})+
+      (S.msg?`<div class="fb${S.bad?" bad":""}">${S.msg}</div>`:"")+
+      `<div class="btns"><button class="primary" data-a="send">Wyślij wiadomość</button></div>`;
+  } else if(S.phase==="result"){
+    const m=S.snaps[S.round].m;
+    h=`<h2>Runda ${S.round+1}: więź za ${price()}</h2>`+draw(S.links,{m})+
+      `<div class="fb">Wiadomość dotarła do wszystkich, średnio w <b>${fmt(m.avg)}</b> kroku.
+      Teraz znika osoba <b>${NAMES[m.hub]}</b>, która miała najwięcej więzi. Kontakt ze sobą
+      zachowuje <b>${m.surv} z ${N-1}</b> pozostałych.</div>
+      <div class="btns"><button class="primary" data-a="next">${S.round<2?`Następna runda: więź za ${PRICES[S.round+1]}`:"Porównaj trzy rundy"}</button></div>`;
+  } else {
+    h=`<h2>Ta sama dziesiątka, trzy ceny więzi</h2><div class="three">`+
+      S.snaps.map((s,i)=>`<div>${draw(s.links,{m:s.m,small:true})}więź za ${PRICES[i]}</div>`).join("")+`</div>
+      <table><tr><th>Cena więzi</th><th>Więzi</th><th>Średnio kroków</th><th>Po usunięciu węzła</th></tr>`+
+      S.snaps.map((s,i)=>`<tr><td>${PRICES[i]}</td><td>${s.m.n}</td><td>${fmt(s.m.avg)}</td><td>${s.m.surv} z ${N-1}</td></tr>`).join("")+`</table>
+      <div class="fb">Czerwony węzeł został usunięty. Przerywana obwódka oznacza osoby, które
+      straciły kontakt z resztą.</div>
+      <p class="muted">W pierwszej rundzie nie było wyboru: przy tej cenie mieściło się tylko
+      drzewo. Jak wyglądało twoje, i ile przetrwało po usunięciu jednego węzła?</p>
+      <div class="btns"><button data-a="start">Jeszcze raz</button></div>`;
+  }
+  $("main").innerHTML=h;
+}
+
+function act(a,v){
+  if(a==="start"){ S=newState(); S.phase="play"; }
+  else if(a==="node"&&S.phase==="play"){
+    const i=Number(v); S.msg=""; S.bad=false;
+    if(S.sel===null) S.sel=i;
+    else if(S.sel===i) S.sel=null;
+    else { const k=key(S.sel,i);
+      if(S.links.has(k)) S.links.delete(k);
+      else if(left()>=price()) S.links.add(k);
+      else { S.msg="Na kolejną więź nie starcza budżetu. Możesz usunąć inną więź i narysować ją gdzie indziej."; S.bad=true; }
+      S.sel=null; }
+  }
+  else if(a==="send"&&S.phase==="play"){
+    const m=metrics(S.links);
+    if(m.reached<N){ S.msg=`Wiadomość nie dotarła do ${N-m.reached} ${N-m.reached===1?"osoby":"osób"}. Dorysuj brakujące więzi albo przełóż te, które masz.`; S.bad=true; }
+    else { S.snaps[S.round]={links:new Set(S.links),m}; S.phase="result"; S.msg=""; S.sel=null; }
+  }
+  else if(a==="next"&&S.phase==="result"){
+    if(S.round<2){ S.round++; S.phase="play";
+      S.msg=`Więź kosztuje teraz ${price()}. Twoje więzi zostają, a za zaoszczędzone pieniądze możesz dorysować nowe.`; }
+    else S.phase="end";
+  }
+  render();
+}
+document.addEventListener("click",e=>{ const t=e.target.closest("[data-a]"); if(t) act(t.dataset.a,t.dataset.v); });
+S=newState(); render();
+</script>
+</body>
+</html>

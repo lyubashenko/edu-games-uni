@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Czego to nie dotyka? — test paradygmatu</title>
+<style>
+  :root{
+    --bg:#f9f9f7; --card:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+    --border:rgba(11,11,11,.10); --accent:#2a78d6; --truth:#e34948;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0d0d0d; --card:#1a1a19; --ink:#fff; --ink2:#c3c2b7;
+      --border:rgba(255,255,255,.10); --accent:#3987e5; --truth:#e66767; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}
+  .wrap{max-width:560px;margin:0 auto;padding:16px 14px 40px}
+  h1{font-size:1.35rem;margin:.2rem 0 .1rem}
+  h2{font-size:1.05rem;margin:0 0 6px}
+  .sub{color:var(--ink2);font-size:.92rem;margin:0 0 14px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:14px;margin-bottom:12px}
+  .muted{color:var(--ink2);font-size:.92rem;margin:4px 0}
+  .prog{display:flex;justify-content:space-between;font-size:.9rem;color:var(--ink2);margin-bottom:8px}
+  .prog b{color:var(--ink)}
+  .item{font-size:1.6rem;font-weight:700;text-align:center;margin:14px 0 4px}
+  .emo{font-size:2.6rem;text-align:center}
+  .timer{text-align:center;font-size:.9rem;color:var(--ink2);font-variant-numeric:tabular-nums}
+  .bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:6px 0 2px}
+  .bar i{display:block;height:100%;background:var(--accent);width:100%}
+  .btns{display:flex;gap:8px;margin-top:12px}
+  button{flex:1;padding:13px 8px;font-size:1rem;font-weight:700;border-radius:10px;
+    border:1px solid var(--border);background:var(--card);color:var(--ink);cursor:pointer;min-height:50px}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button:disabled{opacity:.4}
+  .arg{border-radius:12px;padding:12px;margin-top:10px;font-size:.95rem;
+    background:var(--bg);border:1px solid var(--border)}
+  .big{font-size:2.4rem;font-weight:700;text-align:center;margin:6px 0}
+  textarea{width:100%;min-height:80px;padding:10px;font:inherit;font-size:.95rem;
+    border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--ink)}
+  .hidden{display:none}
+  details{margin-top:6px} summary{cursor:pointer;font-weight:600}
+  details p{color:var(--ink2);font-size:.92rem}
+  .foot{color:var(--muted);font-size:.8rem;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🕹️ Czego to nie dotyka?</h1>
+  <p class="sub">Test tezy o paradygmacie technologii informacyjnej · Społeczeństwo sieci</p>
+
+  <div class="card" id="intro">
+    <p class="muted"><b>Teza:</b> technologie informacyjne nie są osobną branżą. Przenikają
+    <b>każdą</b> dziedzinę życia, tak jak kiedyś elektryczność.</p>
+    <p class="muted"><b>Twoje zadanie:</b> znaleźć dziedziny, których ta teza nie obejmuje.
+    Zobaczysz po kolei zwykłe czynności. Na każdą masz 6 sekund: czy technologie informacyjne
+    ją <b>przenikają</b>, czy <b>nie</b>?</p>
+    <div class="btns"><button class="primary" id="bStart">Szukam wyjątków</button></div>
+  </div>
+
+  <div class="card hidden" id="g1">
+    <div class="prog"><span>czynność <b id="pN">1</b> / <span id="pT"></span></span>
+      <span>wyjątki: <b id="pX">0</b></span></div>
+    <div class="emo" id="emo"></div>
+    <div class="item" id="item"></div>
+    <div class="bar"><i id="barI"></i></div>
+    <div class="timer" id="timer">6 s</div>
+    <div class="btns">
+      <button id="bYes">Przenika</button>
+      <button class="primary" id="bNo">Nie przenika ✋</button>
+    </div>
+  </div>
+
+  <div class="card hidden" id="g2">
+    <div class="prog"><span>adwokat paradygmatu · <b id="qN">1</b> / <span id="qT"></span></span></div>
+    <p class="muted">Uznano to za wyjątek:</p>
+    <div class="item" id="xItem"></div>
+    <div class="arg" id="xArg"></div>
+    <p class="muted" style="margin-top:10px">Czy twój wyjątek się obronił?</p>
+    <div class="btns">
+      <button id="bHold">Tak, nadal wyjątek</button>
+      <button id="bFall">Nie, przenika</button>
+    </div>
+  </div>
+
+  <div class="card hidden" id="end">
+    <h2>Ile wyjątków przetrwało?</h2>
+    <div class="big" id="kept"></div>
+    <p class="muted" id="endNote"></p>
+    <div class="arg">
+      <b>Ostatnie pytanie:</b> co musiałoby się wydarzyć albo co musielibyśmy zobaczyć, żeby
+      uznać tezę o paradygmacie za <b>fałszywą</b>? Zapisz jedną odpowiedź.
+      <textarea placeholder="Teza byłaby fałszywa, gdyby…"></textarea>
+    </div>
+    <div class="btns"><button id="bAgain">Zagraj jeszcze raz</button></div>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>Po co ta gra? (debriefing)</summary>
+      <p>Dla prawie każdej czynności da się znaleźć argument, że technologie informacyjne ją
+      „przenikają”. To siła tezy Castellsa jako obrazu i jej słabość jako teorii. Jeśli nic
+      nie może być wyjątkiem, to teza niczego nie wyklucza — a teza, która niczego nie wyklucza,
+      niczego też nie wyjaśnia.</p>
+      <p>Drugi problem: „przenika” nie znaczy „zmienia sens”. Ślub z zaproszeniem w komunikatorze
+      jest nadal ślubem. Zwróćcie uwagę, które argumenty adwokata pokazują zmianę samej
+      czynności, a które tylko dodatek do niej. Pilnujcie dwukierunkowości: to nie technologia
+      sama przerabia życie.</p>
+      <p><b>Na tablicy:</b> zbierzcie wyjątki, które przetrwały, i odpowiedzi na ostatnie
+      pytanie. To pierwsza wersja zarzutu nadmiernego uogólnienia — wróci na spotkaniu
+      o krytykach.</p>
+    </details>
+  </div>
+
+  <p class="foot">Nic nie jest zapisywane ani wysyłane. Społeczeństwo sieci · AGH.</p>
+</div>
+
+<script>
+"use strict";
+// === CZYNNOŚCI I ARGUMENTY ADWOKATA (edytuj tutaj) ===
+const ITEMS=[
+  {e:"💒",t:"Ślub w kościele",a:"Zaproszenia w komunikatorze, lista prezentów online, przelewy zamiast kopert, playlista DJ-a ze streamingu, zdjęcia na Instagramie jeszcze tego samego wieczoru."},
+  {e:"🍄",t:"Grzybobranie",a:"Aplikacje do rozpoznawania grzybów, grupy w mediach społecznościowych z mapami „wysypu”, prognoza opadów, zdjęcie pełnego koszyka wrzucone do sieci."},
+  {e:"⛪",t:"Niedzielna msza",a:"Transmisje online, które upowszechniły się w pandemii; intencje zamawiane mailowo; w części parafii kolekta przez terminal płatniczy."},
+  {e:"😴",t:"Sen",a:"Zegarek mierzy fazy snu, aplikacja budzi „w lekkiej fazie”, ostatnią rzeczą przed snem i pierwszą po przebudzeniu jest ekran."},
+  {e:"🌱",t:"Praca na działce",a:"Sadzonki zamawiane przez internet, porady z filmów, prognoza przymrozków w telefonie, czujnik wilgotności gleby z aplikacją."},
+  {e:"👵",t:"Obiad u babci",a:"Zdjęcia wnuków na ekranie telefonu, temat rozmowy z wiadomości w aplikacji, przepis sprawdzony w sieci, zakupy z dostawą."},
+  {e:"🗳️",t:"Wybory",a:"Kampanie w mediach społecznościowych, reklamy kierowane do wąskich grup, sondaże online, wyniki zbierane w systemie informatycznym."},
+  {e:"🍞",t:"Pieczenie chleba",a:"Przepis z bloga, zakwas z grupy wymiany, mąka z dostawy, efekt na zdjęciu w sieci."},
+  {e:"♟️",t:"Szachy w parku",a:"Debiuty wyuczone z programów szachowych, ranking z gry online, partia sprawdzona potem przez silnik."},
+  {e:"✂️",t:"Wizyta u fryzjera",a:"Rezerwacja w aplikacji, fryzura wybrana ze zdjęć w sieci, płatność telefonem, przypomnienie SMS dzień wcześniej."},
+  {e:"🏃",t:"Bieganie",a:"Zegarek z GPS, trasa zapisana w aplikacji, porównanie z innymi biegaczami, plan treningowy ułożony przez program."},
+  {e:"⚰️",t:"Pogrzeb",a:"Nekrolog online, transmisja dla rodziny za granicą, wieńce zamawiane przez internet, wspomnienia w mediach społecznościowych."}
+];
+const SECONDS=6;
+// ======================================================
+const $=id=>document.getElementById(id);
+let i=0, exc=[], kept=0, j=0, t0=0, tick=null;
+
+function show(id,on){ $(id).classList.toggle("hidden",!on); }
+function shuffle(a){ for(let k=a.length-1;k>0;k--){const r=Math.floor(Math.random()*(k+1));[a[k],a[r]]=[a[r],a[k]];} return a; }
+let order=[];
+function start(){
+  order=shuffle(ITEMS.slice()); i=0; exc=[]; kept=0;
+  $("pT").textContent=order.length; show("intro",false); show("end",false); show("g1",true); step();
+}
+function step(){
+  const it=order[i];
+  $("pN").textContent=i+1; $("pX").textContent=exc.length;
+  $("emo").textContent=it.e; $("item").textContent=it.t;
+  t0=Date.now(); clearInterval(tick);
+  tick=setInterval(()=>{
+    const left=SECONDS-(Date.now()-t0)/1000;
+    $("barI").style.width=Math.max(0,left/SECONDS*100)+"%";
+    $("timer").textContent=Math.max(0,Math.ceil(left))+" s";
+    if(left<=0) choose(false);
+  },100);
+}
+function choose(isExc){
+  clearInterval(tick);
+  if(isExc) exc.push(order[i]);
+  i++;
+  if(i<order.length) step(); else phase2();
+}
+$("bYes").onclick=()=>choose(false);
+$("bNo").onclick=()=>choose(true);
+function phase2(){
+  show("g1",false);
+  if(!exc.length){ end(); return; }
+  j=0; $("qT").textContent=exc.length; show("g2",true); step2();
+}
+function step2(){
+  const it=exc[j];
+  $("qN").textContent=j+1; $("xItem").textContent=it.e+" "+it.t;
+  $("xArg").innerHTML="<b>Adwokat paradygmatu:</b> "+it.a;
+}
+function judge(holds){ if(holds) kept++; j++; if(j<exc.length) step2(); else end(); }
+$("bHold").onclick=()=>judge(true);
+$("bFall").onclick=()=>judge(false);
+function end(){
+  show("g2",false); show("end",true);
+  $("kept").textContent=kept+" / "+ITEMS.length;
+  $("endNote").innerHTML=!exc.length
+    ? "Żadna czynność nie trafiła na listę wyjątków — wszystko „przenika”. Czy to dowód siły tezy, czy jej słabości?"
+    : `Za wyjątki uznano ${exc.length} czynności, po argumentach adwokata przetrwało ${kept}. Im łatwiej obalić każdy wyjątek, tym trudniej powiedzieć, czego teza <b>nie</b> obejmuje.`;
+}
+$("bStart").onclick=start;
+$("bAgain").onclick=start;
+</script>
+</body>
+</html>
