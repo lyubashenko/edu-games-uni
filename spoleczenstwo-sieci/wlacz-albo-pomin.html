@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Włącz albo pomiń — kogo potrzebuje globalna firma?</title>
+<style>
+  :root{
+    --bg:#faf8f3; --card:#ffffff; --ink:#1a1a1a; --ink2:#4a4a48; --muted:#7a7a76;
+    --border:#e3dfd2; --accent:#2f6b4f; --soft:#e4ede7; --feed:#c9c4b4; --land:#f2efe7; --edge:#a8a89f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#121211; --card:#1c1c1b; --ink:#f4f3ee; --ink2:#c9c8bf; --muted:#9a998f;
+      --border:#33322f; --accent:#5fa883; --soft:#203a2d; --feed:#6b675d; --land:#1f1e1c; --edge:#6b6a63; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}
+  .wrap{max-width:560px;margin:0 auto;padding:16px 14px 120px}
+  h1{font-size:1.4rem;margin:.2rem 0 .1rem}
+  h2{font-size:1.15rem;margin:0 0 8px}
+  .sub{color:var(--ink2);font-size:.95rem;margin:0 0 14px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px}
+  p{margin:6px 0}
+  .muted{color:var(--ink2);font-size:.95rem}
+  /* pasek postępu */
+  .bar{display:flex;justify-content:space-between;align-items:center;font-size:.9rem;color:var(--ink2);margin-bottom:10px}
+  .bar b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .pips{display:flex;gap:4px}
+  .pips i{width:18px;height:6px;border-radius:3px;background:var(--border)}
+  .pips i.done{background:var(--accent)}
+  .pips i.now{background:var(--feed)}
+  /* pytanie */
+  .ask{font-size:1.25rem;font-weight:800;margin:2px 0 4px}
+  .hint{font-size:.95rem;color:var(--ink2);margin:0 0 4px}
+  /* siatka regionów */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .reg{border:2px solid var(--border);border-radius:12px;padding:8px 10px;background:var(--card);
+    cursor:pointer;text-align:left;font:inherit;color:inherit;min-height:0}
+  .reg .nm{display:flex;justify-content:space-between;align-items:baseline;font-weight:800;font-size:1.05rem}
+  .reg .nm small{font-weight:600;font-size:.75rem;color:var(--muted)}
+  .reg.sel{border-color:var(--accent);background:var(--soft)}
+  .reg[disabled]{opacity:.38;cursor:default}
+  .m{display:grid;grid-template-columns:5.6em 1fr;font-size:.8rem;color:var(--ink2);line-height:1.5}
+  .dots{letter-spacing:2px;color:var(--ink)}
+  .dots s{text-decoration:none;color:var(--border)}
+  .has{font-size:.75rem;color:var(--accent);font-weight:700;min-height:1.1em;margin-top:2px}
+  /* przycisk zatwierdzenia przyklejony do dołu */
+  .dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--border);padding:10px 14px 14px}
+  .dock .in{max-width:560px;margin:0 auto}
+  .dock p{margin:0 0 8px;font-size:.95rem}
+  button.go{width:100%;padding:14px 8px;font-size:1.05rem;font-weight:800;border-radius:12px;border:0;
+    background:var(--accent);color:#fff;cursor:pointer;min-height:52px}
+  button.go[disabled]{background:var(--border);color:var(--muted);cursor:default}
+  button.ghost{width:100%;padding:12px;font-size:1rem;font-weight:700;border-radius:12px;margin-top:8px;
+    border:1px solid var(--border);background:var(--card);color:var(--ink);cursor:pointer}
+  /* mapa */
+  svg.map{width:100%;height:auto;display:block;margin:6px 0 4px}
+  .lg{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--ink2);margin:4px 0 8px}
+  .lg span{display:flex;align-items:center;gap:5px}
+  .lg i{display:inline-block;width:14px;height:14px;border-radius:50%}
+  .big{font-size:1.05rem}
+  .skip{font-weight:800;letter-spacing:.1em}
+  table{width:100%;border-collapse:collapse;font-size:.95rem;margin-top:8px}
+  td{padding:7px 4px;border-bottom:1px solid var(--border)}
+  td.num{text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
+  .fb{border-left:4px solid var(--accent);background:var(--soft);border-radius:8px;padding:10px 12px;margin:10px 0;font-size:.98rem}
+  .code{font-size:1.4rem;font-weight:800;letter-spacing:.14em;text-align:center;margin:6px 0}
+  details{margin-top:6px} summary{cursor:pointer;font-weight:700}
+  details p{color:var(--ink2);font-size:.95rem}
+  .foot{color:var(--muted);font-size:.8rem;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🕹️ Włącz albo pomiń</h1>
+  <p class="sub">Kogo potrzebuje globalna firma? · Społeczeństwo sieci</p>
+
+  <div id="main"></div>
+
+  <div class="card">
+    <details>
+      <summary>Po co ta gra? (po zakończeniu)</summary>
+      <p><b>Globalna nie znaczy obejmująca wszystkich.</b> Miałeś albo miałaś dwanaście decyzji
+      i dwanaście regionów. Dałoby się wejść do każdego. Rachunek zysku prowadził jednak wciąż
+      do tych samych miejsc.</p>
+      <p><b>Trzy pozycje na mapie:</b> regiony, które sterują (tu trafia projekt), regiony, które
+      zasilają (montaż, obsługa, surowce), i regiony, których firma nie potrzebuje wcale. Castells
+      nazywa tę trzecią pozycję wykluczeniem i odróżnia ją od wyzysku: wyzyskiwany jest potrzebny,
+      choć tani; wykluczony nie jest potrzebny.</p>
+      <p><b>Porównajcie mapy:</b> czy pominęliście te same regiony? Jeśli tak, to nie była decyzja
+      jednego gracza.</p>
+      <p><b>To coś innego niż awaria.</b> Na spotkaniu 3 usunięty hub rozbijał sieć. Tu regiony
+      zostają na miejscu, tylko nic do nich nie prowadzi, a sieć działa dalej.</p>
+    </details>
+  </div>
+
+  <p class="foot">Regiony i liczby są modelowe: nie odpowiadają żadnym prawdziwym krajom.
+  Nic nie jest zapisywane ani wysyłane. Społeczeństwo sieci · AGH.</p>
+</div>
+<div class="dock" id="dock" hidden><div class="in" id="dockin"></div></div>
+
+<script>
+"use strict";
+// === PARAMETRY (edytuj tutaj) ===
+// k: płace (1 niskie – 5 wysokie), w: kwalifikacje (1–5), i: infrastruktura (1–5), s: złoże surowców
+// x, y: położenie na mapie (viewBox 360 × 230)
+const REG=[
+ {id:"A",k:5,w:5,i:5,x:70,y:48},  {id:"B",k:4,w:5,i:4,x:128,y:70}, {id:"J",k:4,w:2,i:3,x:58,y:104},
+ {id:"L",k:3,w:3,i:4,s:1,x:122,y:126},
+ {id:"C",k:1,w:2,i:4,x:236,y:40}, {id:"D",k:2,w:4,i:4,x:296,y:62}, {id:"H",k:1,w:2,i:3,x:248,y:98},
+ {id:"G",k:3,w:2,i:2,x:310,y:122},
+ {id:"E",k:2,w:1,i:1,x:150,y:192},{id:"F",k:1,w:1,i:1,s:1,x:206,y:176},{id:"I",k:2,w:1,i:2,s:1,x:262,y:194},
+ {id:"K",k:1,w:1,i:2,x:206,y:216}];
+const LAND=[ // trzy modelowe kontynenty (elipsy: cx, cy, rx, ry)
+ [94,88,78,62],[272,82,68,58],[206,197,92,34]];
+const FN=[
+ {id:"P",n:"projekt",ico:"✏️",hint:"Projekt potrzebuje wysokich kwalifikacji i dobrej infrastruktury.",f:r=>8*r.w+4*r.i},
+ {id:"M",n:"montaż",ico:"🔧",hint:"Montaż potrzebuje niskich płac i infrastruktury, żeby wywieźć towar.",f:r=>6*(6-r.k)+4*r.i},
+ {id:"O",n:"obsługę klienta",ico:"🎧",hint:"Obsługa potrzebuje kwalifikacji, niezbyt wysokich płac i łączy.",f:r=>5*r.w+4*(6-r.k)+2*r.i},
+ {id:"S",n:"wydobycie surowców",ico:"⛏️",hint:"Surowce można wydobywać tylko tam, gdzie jest złoże ◆.",f:r=>r.s?30+5*r.i-2*r.k:0}];
+const ROUNDS=3, CAP=2, CLUSTER=4;   // CAP: ile razy ta sama funkcja w jednym regionie; CLUSTER: premia za każdą funkcję już obecną w regionie
+// =================================
+const $=id=>document.getElementById(id);
+let S;
+function newState(){ return {phase:"intro",round:0,fn:0,profit:0,roundProfit:0,sel:null,
+  placed:REG.map(()=>({P:0,M:0,O:0,S:0}))}; }
+const total=p=>p.P+p.M+p.O+p.S;
+function why(ri){ const f=FN[S.fn], r=REG[ri];
+  if(f.id==="S"&&!r.s) return "brak złoża";
+  if(S.placed[ri][f.id]>=CAP) return "już 2 razy"; return ""; }
+function gain(ri){ return FN[S.fn].f(REG[ri])+CLUSTER*total(S.placed[ri]); }
+const dots=n=>"●".repeat(n)+"<s>"+"●".repeat(5-n)+"</s>";
+const FNAME={P:"projekt",M:"montaż",O:"obsługa",S:"surowce"};
+function has(p){ return ["P","M","O","S"].filter(k=>p[k]).map(k=>FNAME[k]+(p[k]>1?" ×"+p[k]:"")).join(", "); }
+
+// --- mapa świata: sterujące (zielone), zasilające (szare), pominięte (puste, przerywane) ---
+function mapSVG(){
+  const st=REG.map((r,i)=>S.placed[i].P>0?"steer":total(S.placed[i])>0?"feed":"skip");
+  const steers=REG.filter((r,i)=>st[i]==="steer");
+  let e="";
+  steers.forEach((a,j)=>steers.slice(j+1).forEach(b=>{
+    e+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="var(--accent)" stroke-width="3"/>`;}));
+  REG.forEach((r,i)=>{ if(st[i]!=="feed"||!steers.length) return;
+    const t=steers.reduce((m,s)=>Math.hypot(s.x-r.x,s.y-r.y)<Math.hypot(m.x-r.x,m.y-r.y)?s:m);
+    e+=`<line x1="${r.x}" y1="${r.y}" x2="${t.x}" y2="${t.y}" stroke="var(--edge)" stroke-width="2.4"/>`;});
+  let n="";
+  REG.forEach((r,i)=>{
+    const c=st[i], R=c==="steer"?15:13;
+    const fill=c==="steer"?"var(--accent)":c==="feed"?"var(--feed)":"var(--card)";
+    const stroke=c==="steer"?"var(--accent)":c==="feed"?"var(--ink2)":"var(--muted)";
+    n+=`<circle cx="${r.x}" cy="${r.y}" r="${R}" fill="${fill}" stroke="${stroke}" stroke-width="2"${c==="skip"?' stroke-dasharray="3 3"':""}/>`+
+       `<text x="${r.x}" y="${r.y+4.5}" text-anchor="middle" font-size="13" font-weight="800" fill="${c==="steer"?"#fff":c==="skip"?"var(--muted)":"var(--ink)"}">${r.id}</text>`;
+    if(r.s) n+=`<text x="${r.x+R+2}" y="${r.y-R+6}" font-size="10" fill="var(--ink2)">◆</text>`;
+  });
+  const land=LAND.map(([cx,cy,rx,ry])=>`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="var(--land)" stroke="var(--border)"/>`).join("");
+  return `<svg class="map" viewBox="0 0 360 236" role="img" aria-label="Mapa świata z zaznaczonymi regionami">${land}${e}${n}</svg>
+    <div class="lg"><span><i style="background:var(--accent)"></i>steruje (projekt)</span>
+    <span><i style="background:var(--feed)"></i>zasila</span>
+    <span><i style="border:2px dashed var(--muted)"></i>pominięty</span></div>`;
+}
+function counts(){
+  const lit=REG.filter((r,i)=>total(S.placed[i])>0), steer=REG.filter((r,i)=>S.placed[i].P>0),
+        skip=REG.filter((r,i)=>total(S.placed[i])===0);
+  return {lit,steer,skip};
+}
+
+function render(){
+  let h="", dock="";
+  if(S.phase==="intro"){
+    h=`<div class="card"><p class="big">Prowadzisz firmę, która sprzedaje na całym świecie.
+      Na mapie jest <b>dwanaście regionów</b>.</p>
+      <p class="muted">Przez <b>trzy rundy</b> umieszczasz w regionach cztery funkcje firmy:
+      ✏️ projekt, 🔧 montaż, 🎧 obsługę klienta i ⛏️ wydobycie surowców. Każda decyzja daje zysk.</p>
+      <p class="muted">Każdy region ma trzy cechy, od ● do ●●●●●: <b>płace</b>, <b>kwalifikacje</b>
+      i <b>infrastrukturę</b>. ◆ oznacza złoże surowców. Region, w którym firma już jest, daje
+      trochę więcej zysku.</p>
+      <p class="muted">Po każdej rundzie zobaczysz mapę świata.</p>
+      <p class="big"><b>Cel:</b> jak największy zysk.</p></div>`;
+    dock=`<button class="go" data-a="start">Otwieram mapę</button>`;
+  } else if(S.phase==="play"){
+    const f=FN[S.fn];
+    const pips=FN.map((x,j)=>`<i class="${j<S.fn?"done":j===S.fn?"now":""}"></i>`).join("");
+    h=`<div class="bar"><span>Runda <b>${S.round+1} z ${ROUNDS}</b></span><span class="pips">${pips}</span>
+      <span>Zysk <b>${S.profit}</b></span></div>
+      <div class="card"><div class="ask">${f.ico} Gdzie umieszczasz ${f.n}?</div><p class="hint">${f.hint}</p></div>
+      <div class="grid">${REG.map((r,i)=>{ const w=why(i), p=S.placed[i];
+        return `<button class="reg${S.sel===i?" sel":""}" data-a="pick" data-v="${i}"${w?" disabled":""}>
+          <div class="nm"><span>${r.id}${r.s?" ◆":""}</span><small>${w}</small></div>
+          <div class="m"><span>płace</span><span class="dots">${dots(r.k)}</span>
+          <span>kwalifikacje</span><span class="dots">${dots(r.w)}</span>
+          <span>infrastruktura</span><span class="dots">${dots(r.i)}</span></div>
+          <div class="has">${has(p)}</div></button>`;}).join("")}</div>`;
+    dock=S.sel===null
+      ? `<p class="muted">Dotknij regionu, żeby zobaczyć, ile zarobisz.</p><button class="go" disabled>Wybierz region</button>`
+      : `<p>${f.ico} ${f.n[0].toUpperCase()+f.n.slice(1)} w regionie <b>${REG[S.sel].id}</b>: zysk <b>+${gain(S.sel)}</b></p>
+         <button class="go" data-a="place">Zatwierdzam</button>`;
+  } else if(S.phase==="round"){
+    const c=counts(), last=S.round===ROUNDS;
+    h=`<div class="card"><h2>Mapa świata po rundzie ${S.round} z ${ROUNDS}</h2>${mapSVG()}
+      <p class="big">Zysk w tej rundzie <b>+${S.roundProfit}</b> · razem <b>${S.profit}</b></p>
+      <p>Firma jest obecna w <b>${c.lit.length}</b> regionach. Pominięte: <b>${c.skip.length}</b></p>
+      ${c.skip.length?`<p class="skip">${c.skip.map(r=>r.id).join(" ")}</p>`:""}</div>`;
+    dock=`<button class="go" data-a="next">${last?"Podsumowanie":"Runda "+(S.round+1)+" →"}</button>`;
+  } else {
+    const c=counts();
+    h=`<div class="card"><h2>Twoja mapa świata po trzech rundach</h2>${mapSVG()}
+      <table><tr><td>Zysk</td><td class="num">${S.profit}</td></tr>
+      <tr><td>Regiony, które sterują</td><td class="num">${c.steer.length}</td></tr>
+      <tr><td>Regiony, które zasilają</td><td class="num">${c.lit.length-c.steer.length}</td></tr>
+      <tr><td>Regiony, do których firma nie weszła ani razu</td><td class="num">${c.skip.length}</td></tr></table>
+      <div class="fb">Nikt tu nikogo celowo nie wykluczył. Dwanaście decyzji, w każdej chodziło
+      tylko o najlepsze miejsce dla jednej funkcji.</div>
+      <p class="muted">Regiony, które pominęła twoja firma. Porównaj z osobą obok: ile liter macie wspólnych?</p>
+      <div class="code">${c.skip.map(r=>r.id).join(" ")||"—"}</div></div>`;
+    dock=`<button class="go" data-a="start">Jeszcze raz</button>`;
+  }
+  $("main").innerHTML=h;
+  $("dockin").innerHTML=dock; $("dock").hidden=!dock;
+}
+function act(a,v){
+  if(a==="start"){ S=newState(); S.phase="play"; window.scrollTo(0,0); }
+  else if(a==="pick"&&S.phase==="play"){ const ri=Number(v); if(!why(ri)) S.sel=ri; }
+  else if(a==="place"&&S.phase==="play"&&S.sel!==null){
+    const g=gain(S.sel); S.placed[S.sel][FN[S.fn].id]++; S.profit+=g; S.roundProfit+=g; S.sel=null;
+    S.fn++; if(S.fn===FN.length){ S.fn=0; S.round++; S.phase="round"; }
+    window.scrollTo(0,0);
+  }
+  else if(a==="next"&&S.phase==="round"){
+    if(S.round===ROUNDS) S.phase="end"; else { S.phase="play"; S.roundProfit=0; }
+    window.scrollTo(0,0);
+  }
+  render();
+}
+document.addEventListener("click",e=>{ const t=e.target.closest("[data-a]"); if(t&&!t.disabled) act(t.dataset.a,t.dataset.v); });
+S=newState(); render();
+</script>
+</body>
+</html>
